@@ -37,7 +37,7 @@ app.post("/webhook", async (req, res) => {
           Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "llama3-8b-8192",
+        model: "groq/llama3-groq-8b-8192-tool-use-preview",
           messages: [
             { role: "system", content: "Eres un asistente amigable que responde mensajes del Colegio Alher." },
             { role: "user", content: message }

@@ -46,7 +46,7 @@ app.post("/webhook", async (req, res) => {
         }),
       });
 
-   
+      const data = await response.json();
       const choice = data.choices?.[0];
       const reply = choice?.message?.content || choice?.content || choice?.text || "No entendí bien tu mensaje.";
 

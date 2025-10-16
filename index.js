@@ -46,8 +46,10 @@ app.post("/webhook", async (req, res) => {
         }),
       });
 
-      const data = await response.json();
-      const reply = data.choices?.[0]?.message?.content || "No entendí bien tu mensaje. Prueba nuevamente";
+   
+      const choice = data.choices?.[0];
+      const reply = choice?.message?.content || choice?.content || choice?.text || "No entendí bien tu mensaje.";
+
 
       // Envía la respuesta a Messenger
       await fetch(`https://graph.facebook.com/v18.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {

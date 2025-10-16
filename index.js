@@ -29,7 +29,7 @@ app.post("/webhook", async (req, res) => {
     const message = event?.message?.text;
 
     if (message) {
-
+      // Llamada al modelo Llama 3.1-8b-instant
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -37,7 +37,7 @@ app.post("/webhook", async (req, res) => {
           Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "groq/llama3-groq-8b-8192-tool-use-preview",
+          model: "llama-3.1-8b-instant",
           messages: [
             { role: "system", content: "Eres un asistente amigable que responde mensajes del Colegio Alher." },
             { role: "user", content: message }
@@ -47,11 +47,8 @@ app.post("/webhook", async (req, res) => {
 
       const data = await response.json();
 
-      console.log("Data de Groq:", data);
-
       const choice = data.choices?.[0];
-      const reply = choice?.content || choice?.text || "No entendí bien tu mensaje nuevamente.";
-
+      const reply = choice?.content || choice?.text || "No entendí bien tu mensaje.";
 
       await fetch(`https://graph.facebook.com/v18.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
         method: "POST",
@@ -69,7 +66,6 @@ app.post("/webhook", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🤖 Bot Messenger con Groq activo en puerto ${PORT}`));

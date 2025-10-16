@@ -37,7 +37,8 @@ app.post("/webhook", async (req, res) => {
           Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-        model: "groq/llama3-groq-8b-8192-tool-use-preview",
+            model: "groq/llama3-groq-8b-8192-tool-use-preview",
+
           messages: [
             { role: "system", content: "Eres un asistente amigable que responde mensajes del Colegio Alher." },
             { role: "user", content: message }
@@ -46,7 +47,7 @@ app.post("/webhook", async (req, res) => {
       });
 
       const data = await response.json();
-      const reply = data.choices?.[0]?.message?.content || "No entendí bien tu mensaje.";
+      const reply = data.choices?.[0]?.message?.content || "No entendí bien tu mensaje. Prueba nuevamente";
 
       // Envía la respuesta a Messenger
       await fetch(`https://graph.facebook.com/v18.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {

@@ -47,6 +47,8 @@ app.post("/webhook", async (req, res) => {
 
       const data = await response.json();
 
+      console.log("Data de Groq:" data);
+
       const choice = data.choices?.[0];
       const reply = choice?.content || choice?.text || "No entendí bien tu mensaje.";
 

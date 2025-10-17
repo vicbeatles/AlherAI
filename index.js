@@ -1,21 +1,28 @@
 import express from "express";
-import bodyParser from "body-parser";
 import fetch from "node-fetch";
+import bodyParser from "body-parser";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
 
+const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "alher-bot-verify";
+
 // Conexión
 app.get("/webhook", (req, res) => {
-  const VERIFY_TOKEN = "alher-bot";
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    console.log("Webhook verificado correctamente ✅");
+    console.log("Webhook verificado correctamente");
     res.status(200).send(challenge);
   } else {
+    console.warn("Verificación de webhook fallida");
     res.sendStatus(403);
   }
 });
@@ -29,30 +36,38 @@ app.post("/webhook", async (req, res) => {
     const message = event?.message?.text;
 
     if (message) {
-      // Llamada al modelo Llama 3.1-8b-instant
+      console.log(`📩 Mensaje recibido: "${message}" de ${senderId}`);
+
+      
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+          Authorization: `Bearer ${GROQ_API_KEY}`,
         },
         body: JSON.stringify({
           model: "llama-3.1-8b-instant",
           messages: [
-            { role: "system", content: "Eres un asistente amigable que responde mensajes del Colegio Alher." },
-            { role: "user", content: message }
+            {
+              role: "system",
+              content:
+                "Eres el asistente virtual oficial del Grupo Educativo Alher. " +
+                "Tu tono debe ser cordial, claro y profesional. Responde dudas sobre niveles educativos, inscripciones, horarios, ubicación, contacto y servicios del colegio. " +
+                "Si no tienes la información exacta, invita amablemente a contactar al número oficial o visitar el sitio web del colegio.",
+            },
+            { role: "user", content: message },
           ],
         }),
       });
 
       const data = await response.json();
+      console.log("🧠 Data de Groq:", data);
 
-      console.log("Data de Groq:", data);
+   
+      const reply = data?.choices?.[0]?.message?.content || "Lo siento, no entendí bien tu mensaje.";
 
-      const choice = data.choices?.[0];
-      const reply = choice?.content || choice?.text || "No entendí bien tu mensaje.";
-
-      await fetch(`https://graph.facebook.com/v18.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
+     
+      await fetch(`https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -60,6 +75,8 @@ app.post("/webhook", async (req, res) => {
           message: { text: reply },
         }),
       });
+
+      console.log(`Respuesta enviada: "${reply}"`);
     }
 
     res.sendStatus(200);
@@ -69,5 +86,6 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🤖 Bot Messenger con Groq activo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor ejecutándose en el puerto ${PORT}`));

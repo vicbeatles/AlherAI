@@ -1,9 +1,25 @@
 import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
+import { alherData } from "./alherData.js"; // Asegúrate de tener este archivo con todos los datos
 
 const app = express();
 app.use(bodyParser.json());
+
+// Función para generar el prompt completo con contexto
+function generarPrompt(message) {
+  // Convertimos los datos a texto legible para la IA
+  const contexto = JSON.stringify(alherData, null, 2);
+
+  return `Eres un asistente virtual del Grupo Educativo Alher.
+Usa la información de forma completa y precisa para responder de manera cordial y clara a preguntas de padres de familia, alumnos o prospectos.
+Si no hay respuesta en los datos, responde educadamente que no puedes responder, sugiriendo contactar al plantel adecuado.
+
+INFORMACION DE ALHER:
+${contexto}
+
+PREGUNTA DEL USUARIO: ${message}`;
+}
 
 // CONEXION
 app.get("/webhook", (req, res) => {
@@ -21,7 +37,7 @@ app.get("/webhook", (req, res) => {
 });
 
 // MANEJO DE DATOS
-  app.post("/webhook", async (req, res) => {
+app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
     const event = entry?.messaging?.[0];
@@ -35,6 +51,10 @@ app.get("/webhook", (req, res) => {
 
     console.log(`📩 Mensaje recibido de ${senderId}: ${message}`);
 
+    // Generamos prompt con toda la información de Alher
+    const prompt = generarPrompt(message);
+
+    // Llamada a Groq
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -45,7 +65,7 @@ app.get("/webhook", (req, res) => {
         model: "llama-3.1-8b-instant",
         messages: [
           { role: "system", content: "Eres un asistente amigable que responde mensajes del Colegio Alher de forma clara y cordial." },
-          { role: "user", content: message },
+          { role: "user", content: prompt },
         ],
       }),
     });

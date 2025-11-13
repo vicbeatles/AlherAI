@@ -1,16 +1,18 @@
 import express from "express";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
-import { alherData } from "./alherData.js"; // Asegúrate de tener este archivo con todos los datos
+import { alherData } from "./alherData.js";
 
 const app = express();
 app.use(bodyParser.json());
 
-// Función para generar el prompt completo con contexto
-function generarPrompt(message) {
-  // Convertimos los datos a texto legible para la IA
-  const contexto = JSON.stringify(alherData, null, 2);
+// 🔹 Estado global para controlar si el bot debe responder
+let botActivo = true;
+let ultimaRespuestaHumana = null;
 
+// 🔹 Función para generar el prompt con datos actualizados
+function generarPrompt(message) {
+  const contexto = JSON.stringify(alherData, null, 2);
   return `Eres un asistente virtual del Grupo Educativo Alher.
 Usa la información de forma completa y precisa para responder de manera cordial y clara a preguntas de padres de familia, alumnos o prospectos.
 Si no hay respuesta en los datos, responde educadamente que no puedes responder, sugiriendo contactar al plantel adecuado.
@@ -21,7 +23,7 @@ ${contexto}
 PREGUNTA DEL USUARIO: ${message}`;
 }
 
-// CONEXION
+// 🔹 Webhook de verificación
 app.get("/webhook", (req, res) => {
   const VERIFY_TOKEN = "alher-bot";
   const mode = req.query["hub.mode"];
@@ -36,25 +38,47 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// MANEJO DE DATOS
+// 🔹 Webhook principal
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
     const event = entry?.messaging?.[0];
+    const message = event?.message?.text;
+    const senderId = event?.sender?.id;
 
-    if (!event?.message?.text || !event?.sender?.id) {
+    // --- 🔸 DETECCIÓN DE RESPUESTA HUMANA ---
+    // Si llega un mensaje enviado por alguien del equipo (no usuario del público)
+    if (event?.message?.is_echo || event?.message?.from?.id === process.env.PAGE_ID) {
+      botActivo = false;
+      ultimaRespuestaHumana = new Date();
+      console.log("⏸️ Bot pausado: detectada respuesta humana desde la página.");
       return res.sendStatus(200);
     }
 
-    const senderId = event.sender.id;
-    const message = event.message.text;
+    // --- 🔸 Ignorar mensajes sin texto válido ---
+    if (!message || !senderId) {
+      return res.sendStatus(200);
+    }
+
+    // --- 🔸 Si el bot está pausado ---
+    if (!botActivo) {
+      const minutosDesdeUltimaHumana = (new Date() - ultimaRespuestaHumana) / 60000;
+      // Reactivar automáticamente después de 10 minutos sin intervención humana
+      if (minutosDesdeUltimaHumana > 10) {
+        botActivo = true;
+        console.log("▶️ Bot reactivado automáticamente tras 10 minutos sin intervención humana.");
+      } else {
+        console.log("🤫 Bot en pausa, no se enviará respuesta automática.");
+        return res.sendStatus(200);
+      }
+    }
 
     console.log(`📩 Mensaje recibido de ${senderId}: ${message}`);
 
-    // Generamos prompt con toda la información de Alher
+    // Generar prompt con información de Alher
     const prompt = generarPrompt(message);
 
-    // Llamada a Groq
+    // 🔹 Llamada a Groq
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -64,20 +88,19 @@ app.post("/webhook", async (req, res) => {
       body: JSON.stringify({
         model: "llama-3.1-8b-instant",
         messages: [
-          { role: "system", content: "Eres un asistente amigable que responde mensajes del Colegio Alher de forma clara y cordial." },
+          { role: "system", content: "Eres un asistente amigable que responde mensajes de Grupo Educativo Alher de forma clara, amigable y cordial." },
           { role: "user", content: prompt },
         ],
       }),
     });
 
     const data = await response.json();
-    console.log("📡 Data de Groq:", data);
-
     const reply =
       data?.choices?.[0]?.message?.content ||
       data?.choices?.[0]?.text ||
       "No entendí bien tu mensaje. Prueba de nuevo.";
 
+    // 🔹 Enviar respuesta a Messenger
     await fetch(`https://graph.facebook.com/v18.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -95,5 +118,6 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
+// 🔹 Servidor activo
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🤖 Bot Messenger con Groq activo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🤖 Bot Messenger Alher activo en puerto ${PORT}`));

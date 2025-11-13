@@ -1,4 +1,4 @@
-const alherData = {
+export const alherData = {
   nombre: "Grupo Educativo Alher",
   años: 49,
   valores: ["Integridad", "Respeto", "Responsabilidad", "Excelencia", "Solidaridad"],

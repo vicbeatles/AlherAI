@@ -1,7 +1,7 @@
 export const alherData = {
   nombre: "Grupo Educativo Alher",
   años: 49,
-  valores: ["Integridad", "Respeto", "Responsabilidad", "Excelencia", "Solidaridad"],
+  valores: ["Integridad", "Edificación", "Unión", "Lealtad", "Respeto"],
   fundador: "Prof. Alfredo Herrera Meneses",
   mision:
     "Formar seres humanos integrales y empoderados, capaces de enfrentar desafíos personales y profesionales con confianza y fortalezas académicas, mediante el compromiso de sus colaboradores y la generación de un entorno propicio, para contribuir a una sociedad equitativa y sustentable.",
@@ -26,18 +26,18 @@ export const alherData = {
     "Enfermería escolar",
     "Mindfulness",
     "Progrentis",
-    "Inglés intensivo"
+    "(Sistema bicultural y bilingue (Inglés intensivo)"
   ],
   niveles: {
     estancia: {
       nombre: "Estancia Infantil",
       descripcion:
-        "En la Estancia Infantil Alher, los pequeños desarrollan sus primeras habilidades sociales, motrices y cognitivas en un entorno seguro, cálido y estimulante, con atención personalizada y espacios diseñados especialmente para ellos.",
+        "En la Estancia Infantil Alher brindamos atención amorosa y profesional a bebés y lactantes, en un entorno seguro, higiénico y lleno de estímulos positivos. Cada día se promueve el desarrollo físico, emocional y sensorial de los pequeños a través de rutinas, juegos, música y afecto.",
     },
     maternal: {
       nombre: "Maternal",
       descripcion:
-        "En Maternal Alher se fomenta el desarrollo del lenguaje, la socialización y las habilidades motrices mediante juegos, canciones, actividades artísticas y un enfoque de descubrimiento y aprendizaje significativo.",
+        "El nivel Maternal Alher brinda atención integral a niños en etapa preescolar temprana. Se fomenta el desarrollo del lenguaje, pensamiento lógico-matemático, habilidades sociales y motricidad fina, mediante actividades lúdicas y programas que introducen el bilingüismo y la educación emocional.",
     },
     preescolar: {
       nombre: "Preescolar",
@@ -64,8 +64,10 @@ export const alherData = {
     aragon: {
       nombre: "Plantel Aragón",
       direccion:
-        "Av. Valle del Don #5, Valle de Aragón 3a Sección, Ecatepec, Estado de México.",
-      telefono: "+52 56 1538 1099",
+        "Valle de Oaxaca No. 88, Col. Valle de Aragón 2da Secc., Nezahualcóyotl, Estado de México, C.P. 57100",
+      WhatsApp: "+52 56 1538 1099",
+      telefono: "+52 55 5783 8179",
+      correo: "informesaragon@alher.edu.mx",
       niveles: [
         "Estancia Infantil",
         "Maternal",
@@ -78,23 +80,27 @@ export const alherData = {
     santiago: {
       nombre: "Plantel Santiago",
       direccion:
-        "Av. Valle de Santiago, Valle de Aragón 1a Sección, Nezahualcóyotl, Estado de México.",
-      telefono: "+52 56 1538 1099",
-      niveles: ["Maternal", "Preescolar", "Primaria"],
+        "Valle de Santiago No. 51 E, Col. Valle de Aragón 1ra Secc., Nezahualcóyotl, Estado de México, C.P. 57100",
+      WhatsApp: "+52 55 2914 5270 ",
+      telefono: "+52 55 5783 8179",
+       correo: "informessantiago@alher.edu.mx",
+      niveles: ["Estancia Infantil", "Maternal", "Preescolar", "Primaria"],
     },
     acueducto: {
       nombre: "Plantel Acueducto",
       direccion:
-        "Av. Acueducto #142, Col. Jorge Jiménez Cantú, Ecatepec, Estado de México.",
-      telefono: "+52 55 5116 0694",
-      niveles: ["Preescolar", "Primaria", "Secundaria", "Bachillerato (SEP)"],
+        "Blvd. del Temoluco No. 113 esq. Cima No.9, Col. U.H. Acueducto de Guadalupe, Gustavo A. Madero, CDMX, C.P. 07279",
+       WhatsApp: "+52 55 4901 4570",
+      telefono: "+52 55 5388 3352",
+       correo: "informesacueducto@alher.edu.mx",
+      niveles: ["Preescolar", "Primaria", "Secundaria", "Preparatoria"],
     },
   },
   promociones: {
     alherDays: {
       nombre: "AlherDays",
       descripcion:
-        "Durante AlherDays, puedes obtener descuentos especiales en pagos de servicios de hasta el 20% y en colegiaturas de hasta el 25%, dependiendo del nivel educativo a inscribir.",
+        "Durante AlherDays, puedes obtener descuentos especiales en pagos de servicios de hasta el 20% y en colegiaturas de hasta el 25%, dependiendo del nivel educativo a inscribir. Válido en planteles Aragón y Santiago",
       vigencia: "Del 13 al 19 de noviembre.",
     },
   },

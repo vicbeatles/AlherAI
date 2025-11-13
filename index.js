@@ -6,21 +6,21 @@ import { alherData } from "./alherData.js";
 const app = express();
 app.use(bodyParser.json());
 
-let botPausado = false; // Bandera global
-
+// Función para generar el prompt completo con contexto
 function generarPrompt(message) {
   const contexto = JSON.stringify(alherData, null, 2);
-  return `Eres un asistente virtual del Grupo Educativo Alher.
-Usa la información de forma completa y precisa para responder de manera cordial y clara a preguntas de padres de familia, alumnos o prospectos.
-Si no hay respuesta en los datos, responde educadamente que no puedes responder, sugiriendo contactar al plantel adecuado.
 
-INFORMACION DE ALHER:
+  return `Eres el asistente virtual oficial del Grupo Educativo Alher.
+Tu tarea es responder de forma clara, amable y completa a padres de familia, alumnos o prospectos, usando ÚNICAMENTE la información proporcionada a continuación.
+No inventes enlaces, direcciones, teléfonos ni promociones. Si no tienes el dato, indica educadamente que no está disponible y sugiere contactar al plantel correspondiente.
+
+INFORMACIÓN DE ALHER:
 ${contexto}
 
 PREGUNTA DEL USUARIO: ${message}`;
 }
 
-// ✅ Verificación del webhook
+// VERIFICACIÓN DEL WEBHOOK
 app.get("/webhook", (req, res) => {
   const VERIFY_TOKEN = "alher-bot";
   const mode = req.query["hub.mode"];
@@ -35,39 +35,24 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-// ✅ Recepción de mensajes
+// MANEJO DE MENSAJES
 app.post("/webhook", async (req, res) => {
   try {
     const entry = req.body.entry?.[0];
-
-    // 🔹 Detección de eventos standby (agente humano activo)
-    if (entry?.standby) {
-      botPausado = true;
-      console.log("🧍‍♂️ Se detectó actividad humana, bot en pausa.");
-      return res.sendStatus(200);
-    }
-
     const event = entry?.messaging?.[0];
-    if (!event) return res.sendStatus(200);
 
-    // 🔹 Si el mensaje es un eco del bot, no hacer nada
-    if (event.message?.is_echo) return res.sendStatus(200);
-
-    // 🔹 Si hay un mensaje de un humano y el bot está pausado, no responder
-    if (botPausado) {
-      console.log("🤖 Bot pausado, no responde hasta reactivación manual.");
+    if (!event?.message?.text || !event?.sender?.id) {
       return res.sendStatus(200);
     }
 
     const senderId = event.sender.id;
-    const message = event.message?.text;
-    if (!message) return res.sendStatus(200);
+    const message = event.message.text;
 
     console.log(`📩 Mensaje recibido de ${senderId}: ${message}`);
 
     const prompt = generarPrompt(message);
 
-    // 🔹 Consulta a la API de Groq
+    // Llamada al modelo mejorado de Groq
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -77,17 +62,24 @@ app.post("/webhook", async (req, res) => {
       body: JSON.stringify({
         model: "meta-llama/llama-4-scout-17b-16e-instruct",
         messages: [
-          { role: "system", content: "Eres un asistente amigable que responde mensajes del Colegio Alher de forma clara y cordial." },
+          {
+            role: "system",
+            content:
+              "Eres el asistente oficial de Grupo Educativo Alher. NO inventes datos, enlaces, direcciones ni promociones. Usa solo la información disponible en el contexto. Responde siempre en tono amigable, cálido y con lenguaje claro en español neutro.",
+          },
           { role: "user", content: prompt },
         ],
       }),
     });
 
     const data = await response.json();
+    console.log("📡 Data de Groq:", data);
+
     const reply =
       data?.choices?.[0]?.message?.content ||
-      "No entendí bien tu mensaje. Prueba de nuevo.";
+      "No entendí bien tu mensaje. ¿Podrías reformularlo, por favor?";
 
+    // Enviar respuesta al usuario en Messenger
     await fetch(`https://graph.facebook.com/v18.0/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -103,13 +95,6 @@ app.post("/webhook", async (req, res) => {
     console.error("❌ Error en webhook:", err);
     res.sendStatus(500);
   }
-});
-
-// ✅ Endpoint manual para reactivar el bot
-app.get("/reactivar-bot", (req, res) => {
-  botPausado = false;
-  console.log("🚀 Bot reactivado manualmente.");
-  res.send("Bot reactivado.");
 });
 
 const PORT = process.env.PORT || 3000;

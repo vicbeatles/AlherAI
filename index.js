@@ -75,7 +75,7 @@ app.post("/webhook", async (req, res) => {
         Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
+        model: "meta-llama/llama-4-scout-17b-16e-instruct",
         messages: [
           { role: "system", content: "Eres un asistente amigable que responde mensajes del Colegio Alher de forma clara y cordial." },
           { role: "user", content: prompt },
